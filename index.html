@@ -74,13 +74,11 @@
       font-size: 22px;
       font-weight: bold;
     }
-
     .separator {
       border-top: 2px solid #444;
       margin: 15px auto;
       width: 60%;
     }
-
     .confetti {
       position: fixed;
       bottom: 0;
@@ -93,7 +91,6 @@
       50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
-
     #popupOverlay {
       display: none;
       position: fixed;
@@ -169,7 +166,8 @@
   <script>
     let currentCrate = null;
     let cooldownActive = false;
-    let rollCounter = 0;
+    let legendaryCounter = 0;
+    let mythicCounter = 0;
 
     const rarityOrder = { mythic: 1, legendary: 2, epic: 3, rare: 4, uncommon: 5 };
 
@@ -210,7 +208,8 @@
 
     function selectCrate(crate) {
       currentCrate = crate;
-      rollCounter = 0;
+      legendaryCounter = 0;
+      mythicCounter = 0;
       document.getElementById("unboxBtn").disabled = false;
       document.getElementById("multiInput").style.display = "inline-block";
       document.getElementById("multiUnboxBtn").style.display = "inline-block";
@@ -240,7 +239,6 @@
       if (crateData.mythic) {
         return { item: randomChoice(crateData.mythic.items), rarity: crateData.mythic.color, type: "mythic" };
       }
-
       return { item: "Unknown", rarity: "", type: "none" };
     }
 
@@ -251,16 +249,17 @@
     function unbox() {
       if (!currentCrate || cooldownActive) return;
 
-      rollCounter++;
+      legendaryCounter++;
+      mythicCounter++;
       const result = getRandomItem(crates[currentCrate]);
 
       if (result.type === "legendary") {
-        document.getElementById("result").innerHTML = `You rolled a legendary after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
-        rollCounter = 0;
+        document.getElementById("result").innerHTML = `You rolled a legendary after ${legendaryCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        legendaryCounter = 0;
         triggerCooldown(500);
       } else if (result.type === "mythic") {
-        document.getElementById("result").innerHTML = `You rolled a mythic after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
-        rollCounter = 0;
+        document.getElementById("result").innerHTML = `You rolled a mythic after ${mythicCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        mythicCounter = 0;
         triggerCooldown(5000);
         document.getElementById("mythicSound").play();
         launchConfetti();
@@ -284,7 +283,8 @@
 
       let results = [];
       for (let i = 0; i < amount; i++) {
-        rollCounter++;
+        legendaryCounter++;
+        mythicCounter++;
         results.push(getRandomItem(crates[currentCrate]));
       }
 
