@@ -75,14 +75,12 @@
       font-weight: bold;
     }
 
-    /* Separator */
     .separator {
       border-top: 2px solid #444;
       margin: 15px auto;
       width: 60%;
     }
 
-    /* Confetti */
     .confetti {
       position: fixed;
       bottom: 0;
@@ -96,7 +94,6 @@
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
 
-    /* Popup overlay */
     #popupOverlay {
       display: none;
       position: fixed;
@@ -115,9 +112,7 @@
       overflow-y: auto;
       text-align: left;
     }
-    #popupBox h2 {
-      margin-top: 0;
-    }
+    #popupBox h2 { margin-top: 0; }
     #closePopup {
       background: #444;
       color: white;
@@ -127,9 +122,7 @@
       cursor: pointer;
       float: right;
     }
-    #closePopup:hover {
-      background: #666;
-    }
+    #closePopup:hover { background: #666; }
   </style>
 </head>
 <body>
@@ -155,9 +148,7 @@
 
   <div>
     <button id="unboxBtn" onclick="unbox()" disabled>Unbox</button>
-
     <div class="separator"></div>
-
     <input type="number" id="multiInput" min="1" placeholder="Amount" style="display:none;">
     <button id="multiUnboxBtn" onclick="multiUnbox()" style="display:none;">Unbox Amount</button>
   </div>
@@ -178,6 +169,7 @@
   <script>
     let currentCrate = null;
     let cooldownActive = false;
+    let rollCounter = 0;
 
     const rarityOrder = { mythic: 1, legendary: 2, epic: 3, rare: 4, uncommon: 5 };
 
@@ -218,6 +210,7 @@
 
     function selectCrate(crate) {
       currentCrate = crate;
+      rollCounter = 0;
       document.getElementById("unboxBtn").disabled = false;
       document.getElementById("multiInput").style.display = "inline-block";
       document.getElementById("multiUnboxBtn").style.display = "inline-block";
@@ -258,17 +251,21 @@
     function unbox() {
       if (!currentCrate || cooldownActive) return;
 
+      rollCounter++;
       const result = getRandomItem(crates[currentCrate]);
-      document.getElementById("result").innerHTML = `You unboxed: ${result.rarity} <b>${result.item}</b>`;
 
-      // Cooldowns
       if (result.type === "legendary") {
-        triggerCooldown(500); // 0.5s cooldown
-      }
-      if (result.type === "mythic") {
-        triggerCooldown(5000); // 5s cooldown
+        document.getElementById("result").innerHTML = `✨ You rolled a legendary after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        rollCounter = 0;
+        triggerCooldown(500);
+      } else if (result.type === "mythic") {
+        document.getElementById("result").innerHTML = `💥 You rolled a mythic after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        rollCounter = 0;
+        triggerCooldown(5000);
         document.getElementById("mythicSound").play();
         launchConfetti();
+      } else {
+        document.getElementById("result").innerHTML = `You unboxed: ${result.rarity} <b>${result.item}</b>`;
       }
     }
 
@@ -287,10 +284,10 @@
 
       let results = [];
       for (let i = 0; i < amount; i++) {
+        rollCounter++;
         results.push(getRandomItem(crates[currentCrate]));
       }
 
-      // Group results
       const grouped = {};
       results.forEach(r => {
         const key = r.type + "|" + r.rarity + " " + r.item;
@@ -298,7 +295,6 @@
         grouped[key]++;
       });
 
-      // Sort by rarity
       const sorted = Object.entries(grouped).sort((a, b) => {
         const rarityA = a[0].split("|")[0];
         const rarityB = b[0].split("|")[0];
