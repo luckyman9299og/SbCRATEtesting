@@ -255,11 +255,11 @@
       const result = getRandomItem(crates[currentCrate]);
 
       if (result.type === "legendary") {
-        document.getElementById("result").innerHTML = `✨ You rolled a legendary after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        document.getElementById("result").innerHTML = `You rolled a legendary after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
         rollCounter = 0;
         triggerCooldown(500);
       } else if (result.type === "mythic") {
-        document.getElementById("result").innerHTML = `💥 You rolled a mythic after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        document.getElementById("result").innerHTML = `You rolled a mythic after ${rollCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
         rollCounter = 0;
         triggerCooldown(5000);
         document.getElementById("mythicSound").play();
