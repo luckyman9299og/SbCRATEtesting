@@ -10,10 +10,10 @@
       text-align: center;
       background: #111;
       color: white;
+      overflow-x: hidden;
+      overflow-y: hidden;
     }
-    h1 {
-      margin: 20px;
-    }
+    h1 { margin: 20px; }
     .crate-buttons {
       display: flex;
       justify-content: center;
@@ -43,7 +43,7 @@
       height: 30px;
       object-fit: contain;
     }
-    #unboxBtn {
+    #unboxBtn, #multiUnboxBtn {
       margin: 10px;
       padding: 12px 20px;
       border: none;
@@ -52,135 +52,285 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    #unboxBtn:hover {
-      transform: scale(1.05);
+    #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled { transform: scale(1.05); }
+    #unboxBtn:disabled, #multiUnboxBtn:disabled {
+      background: #444;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    #multiInput {
+      width: 80px;
+      padding: 6px;
+      border-radius: 6px;
+      border: none;
+      text-align: center;
     }
     #result {
       margin-top: 20px;
       font-size: 22px;
       font-weight: bold;
     }
+    .separator {
+      border-top: 2px solid #444;
+      margin: 15px auto;
+      width: 60%;
+    }
+    .confetti {
+      position: fixed;
+      bottom: 0;
+      opacity: 0.9;
+      animation: pop-fall 3s ease-out forwards;
+    }
+    @keyframes pop-fall {
+      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
+      50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    #popupOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #popupBox {
+      background: #222;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+    #popupBox h2 { margin-top: 0; }
+    #closePopup {
+      background: #444;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      float: right;
+    }
+    #closePopup:hover { background: #666; }
   </style>
 </head>
 <body>
   <h1>Crate Unbox Simulator</h1>
 
   <div class="crate-buttons">
-    <button onclick="selectCrate('standard')">
-      <img src="standardcrate.png" alt="Standard Crate"> Standard Crate
-    </button>
-    <button onclick="selectCrate('megarock')">
-      <img src="megarockcrate.png" alt="Megarock Crate"> Megarock Crate
-    </button>
-    <button onclick="selectCrate('bob')">
-      <img src="bobcrate.png" alt="Bob Crate"> Bob Crate
-    </button>
-    <button onclick="selectCrate('barzil')">
-      <img src="barzilcrate.png" alt="Barzil Crate"> Barzil Crate
-    </button>
-    <button onclick="selectCrate('overkill')">
-      <img src="overkillcrate.png" alt="Overkill Crate"> Overkill Crate
-    </button>
-    <button onclick="selectCrate('jack')">
-      <img src="jackscrate.png" alt="Jack's Crate"> Jack’s Crate
-    </button>
+    <button onclick="selectCrate('standard')"><img src="standardcrate.png">Standard Crate</button>
+    <button onclick="selectCrate('megarock')"><img src="megarockcrate.png">Megarock Crate</button>
+    <button onclick="selectCrate('bob')"><img src="bobcrate.png">Bob Crate</button>
+    <button onclick="selectCrate('barzil')"><img src="barzilcrate.png">Barzil Crate</button>
+    <button onclick="selectCrate('overkill')"><img src="overkillcrate.png">Overkill Crate</button>
+    <button onclick="selectCrate('jack')"><img src="jackscrate.png">Jack’s Crate</button>
   </div>
 
   <div>
     <button id="unboxBtn" onclick="unbox()" disabled>Unbox</button>
+    <div class="separator"></div>
+    <input type="number" id="multiInput" min="1" placeholder="Amount" style="display:none;">
+    <button id="multiUnboxBtn" onclick="multiUnbox()" style="display:none;">Unbox Amount</button>
   </div>
 
   <div id="result"></div>
 
+  <!-- Popup -->
+  <div id="popupOverlay">
+    <div id="popupBox">
+      <button id="closePopup" onclick="closePopup()">Close</button>
+      <h2>Unbox Log</h2>
+      <div id="logContent"></div>
+    </div>
+  </div>
+
+  <audio id="mythicSound" src="mythic.mp3"></audio>
+
   <script>
     let currentCrate = null;
+    let cooldownActive = false;
+    let legendaryCounter = 0;
+    let mythicCounter = 0;
+
+    const rarityOrder = { mythic: 1, legendary: 2, epic: 3, rare: 4, uncommon: 5 };
 
     const crates = {
       standard: {
-        mythic: { chance: 0, items: [], color: "🔴" },
-        legendary: { chance: 0.5, items: ["lightning"], color: "🟡" },
-        epic: { chance: 2.5, items: ["psychic", "poisonous"], color: "🟣" },
-        rare: { chance: 18, items: ["pixilated lightning", "plasma blast", "painted", "fireworks"], color: "🔵" },
-        uncommon: { chance: 79, items: ["slime", "water", "leaves", "ink", "forcefield", "explosion", "cartoony water", "butterflies", "blue explosion", "birds"], color: "🟢" }
+        uncommons: { chance: 79, items: ["slime","water","leaves","ink","forcefield","explosion","cartoony water","butterflies","blue explosion","birds"], color: "🟢" },
+        rares: { chance: 18, items: ["pixilated lightning","plasma blast","painted","fireworks"], color: "🔵" },
+        epics: { chance: 2.5, items: ["psychic","poisonous"], color: "🟣" },
+        legendary: { chance: 0.5, items: ["lightning"], color: "🟡" }
       },
       megarock: {
-        mythic: { chance: 0.1, items: ["Energized"], color: "🔴" },
-        legendary: { chance: 0.6, items: ["Glass", "Slashes"], color: "🟡" },
-        epic: { chance: 3.3, items: ["Windy", "Rgb", "Smoked"], color: "🟣" },
-        rare: { chance: 26, items: ["Robux", "Pixelated explosion", "Music", "Gold", "Glitched"], color: "🔵" },
-        uncommon: { chance: 70, items: ["Stop", "Rocks", "Noob", "Moyai", "Lucky", "Fish", "Duckie", "Blossom"], color: "🟢" }
+        uncommons: { chance: 70, items: ["Stop","Rocks","Noob","Moyai","Lucky","Fish","Duckie","Blossom"], color: "🟢" },
+        rares: { chance: 26, items: ["Robux","Pixelated explosion","Music","Gold","Glitched"], color: "🔵" },
+        epics: { chance: 3.3, items: ["Windy","Rgb","Smoked"], color: "🟣" },
+        legendary: { chance: 0.6, items: ["Glass","Slashes"], color: "🟡" },
+        mythic: { chance: 0.1, items: ["Energized"], color: "🔴" }
       },
       bob: {
-        mythic: { chance: 0.15, items: ["Portal"], color: "🔴" },
-        legendary: { chance: 0.85, items: ["Darkness", "Holy"], color: "🟡" },
-        epic: { chance: 5, items: ["Phoenix", "Fractal", "Cursed", "Gravity"], color: "🟣" },
-        rare: { chance: 34, items: ["Light", "Pixel Pubbles", "Rays", "Eye", "Iceshards"], color: "🔵" },
-        uncommon: { chance: 60, items: ["Snow", "Retro", "Heart", "Sandy", "Evil", "Bread", "Binary"], color: "🟢" }
+        uncommons: { chance: 60, items: ["Snow","Retro","Heart","Sandy","Evil","Bread","Binary"], color: "🟢" },
+        rares: { chance: 34, items: ["Light","Pixel Pubbles","Rays","Eye","Iceshards"], color: "🔵" },
+        epics: { chance: 5, items: ["Phoenix","Fractal","Cursed","Gravity"], color: "🟣" },
+        legendary: { chance: 0.85, items: ["Darkness","Holy"], color: "🟡" },
+        mythic: { chance: 0.15, items: ["Portal"], color: "🔴" }
       },
       barzil: {
-        mythic: { chance: 0.15, items: ["Barzilian Nexus"], color: "🔴" },
-        legendary: { chance: 0.85, items: ["Pablo's Clownery", "Crunchy Explosion"], color: "🟡" },
-        epic: { chance: 5, items: ["Mortis #1 Fan", "Duel of the Ages", "Minefield"], color: "🟣" },
-        rare: { chance: 34, items: ["Pondering Orb", "Clocktower Crash", "Oog's Damnation", "Portal Mist"], color: "🔵" },
-        uncommon: { chance: 60, items: ["Erupting Bricks", "Job Application", "Pob's Light Snack", "Snoob Migration", "Falling Boulder", "Basketball Explosion", "Angry Cat", "Evil Cat", "Curious Cat", "Hello Cat"], color: "🟢" }
+        uncommons: { chance: 60, items: ["Erupting Bricks","Job Application","Pob's Light Snack","Snoob Migration","Falling Boulder","Basketball Explosion","Angry Cat","Evil Cat","Curious Cat","Hello Cat"], color: "🟢" },
+        rares: { chance: 34, items: ["Pondering Orb","Clocktower Crash","Oog's Damnation","Portal Mist"], color: "🔵" },
+        epics: { chance: 5, items: ["Mortis #1 Fan","Duel of the Ages","Minefield"], color: "🟣" },
+        legendary: { chance: 0.85, items: ["Pablo's Clownery","Crunchy Explosion"], color: "🟡" },
+        mythic: { chance: 0.15, items: ["Barzilian Nexus"], color: "🔴" }
       },
       overkill: {
-        mythic: { chance: 1.5, items: ["Hellfire Sigil"], color: "🔴" },
-        legendary: { chance: 18.5, items: ["Toxic Puddle", "Purple Rapture", "Popstar Spectacle"], color: "🟡" },
-        epic: { chance: 80, items: ["Vibrant Supernova", "Sand Tornado", "Rainbomb", "Chilling Fog", "Aquatic Gateway"], color: "🟣" }
+        epics: { chance: 80, items: ["Vibrant Supernova","Sand Tornado","Rainbomb","Chilling Fog","Aquatic Gateway"], color: "🟣" },
+        legendary: { chance: 18.5, items: ["Toxic Puddle","Purple Rapture","Popstar Spectacle"], color: "🟡" },
+        mythic: { chance: 1.5, items: ["Hellfire Sigil"], color: "🔴" }
       },
       jack: {
-        mythic: { chance: 0.2, items: ["Soul Inferno"], color: "🔴" },
-        legendary: { chance: 1, items: ["Crimson Aura"], color: "🟡" },
-        epic: { chance: 8, items: ["Blazing Storm", "Aether Charge"], color: "🟣" },
-        rare: { chance: 30, items: ["Echo Wave", "Cyber Dust"], color: "🔵" },
-        uncommon: { chance: 60.8, items: ["Static", "Leaf Flare", "Crystal Spark", "Fog Drift"], color: "🟢" }
+        uncommons: { chance: 60, items: ["Troll Requiem","Runes","Realistic Eye","Lava Skulls","Fall Leaves","Cauldron Bubble"], color: "🟢" },
+        rares: { chance: 34, items: ["Witch's Spell","Shadow Bite","Run","Crows"], color: "🔵" },
+        epics: { chance: 5, items: ["Crimson Splash","Batty","Abyss"], color: "🟣" },
+        legendary: { chance: 0.85, items: ["Eerie Fog","Jack 'O Lantern"], color: "🟡" },
+        mythic: { chance: 0.15, items: ["Damned"], color: "🔴" }
       }
     };
 
     function selectCrate(crate) {
       currentCrate = crate;
+      legendaryCounter = 0;
+      mythicCounter = 0;
       document.getElementById("unboxBtn").disabled = false;
-      document.getElementById("result").innerHTML = `Selected <b>${crate}</b> crate. Press Unbox!`;
+      document.getElementById("multiInput").style.display = "inline-block";
+      document.getElementById("multiUnboxBtn").style.display = "inline-block";
+      document.getElementById("result").innerHTML = `Selected <b>${crate} crate</b>. Press Unbox!`;
     }
 
     function getRandomItem(crateData) {
       let roll = Math.random() * 100;
       let cumulative = 0;
 
-      // order: Mythical → Legendary → Epic → Rare → Uncommon
-      if (crateData.mythic) {
-        cumulative += crateData.mythic.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.mythic.items), rarity: crateData.mythic.color };
+      if (crateData.uncommons) {
+        cumulative += crateData.uncommons.chance;
+        if (roll <= cumulative) return { item: randomChoice(crateData.uncommons.items), rarity: crateData.uncommons.color, type: "uncommon" };
+      }
+      if (crateData.rares) {
+        cumulative += crateData.rares.chance;
+        if (roll <= cumulative) return { item: randomChoice(crateData.rares.items), rarity: crateData.rares.color, type: "rare" };
+      }
+      if (crateData.epics) {
+        cumulative += crateData.epics.chance;
+        if (roll <= cumulative) return { item: randomChoice(crateData.epics.items), rarity: crateData.epics.color, type: "epic" };
       }
       if (crateData.legendary) {
         cumulative += crateData.legendary.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.legendary.items), rarity: crateData.legendary.color };
+        if (roll <= cumulative) return { item: randomChoice(crateData.legendary.items), rarity: crateData.legendary.color, type: "legendary" };
       }
-      if (crateData.epic) {
-        cumulative += crateData.epic.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.epic.items), rarity: crateData.epic.color };
+      if (crateData.mythic) {
+        return { item: randomChoice(crateData.mythic.items), rarity: crateData.mythic.color, type: "mythic" };
       }
-      if (crateData.rare) {
-        cumulative += crateData.rare.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.rare.items), rarity: crateData.rare.color };
-      }
-      if (crateData.uncommon) {
-        return { item: randomChoice(crateData.uncommon.items), rarity: crateData.uncommon.color };
-      }
-
-      return { item: "Unknown", rarity: "" };
+      return { item: "Unknown", rarity: "", type: "none" };
     }
 
-    function randomChoice(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
+    function randomChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
     function unbox() {
-      if (!currentCrate) return;
-      const crateData = crates[currentCrate];
-      const result = getRandomItem(crateData);
-      document.getElementById("result").innerHTML = `You unboxed: ${result.rarity} <b>${result.item}</b>`;
+      if (!currentCrate || cooldownActive) return;
+      legendaryCounter++;
+      mythicCounter++;
+      const result = getRandomItem(crates[currentCrate]);
+
+      if (result.type === "legendary") {
+        document.getElementById("result").innerHTML = `You rolled a legendary after ${legendaryCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        legendaryCounter = 0;
+        triggerCooldown(500);
+      } else if (result.type === "mythic") {
+        document.getElementById("result").innerHTML = `You rolled a mythic after ${mythicCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
+        mythicCounter = 0;
+        triggerCooldown(5000);
+        document.getElementById("mythicSound").play();
+        launchConfetti();
+      } else {
+        document.getElementById("result").innerHTML = `You unboxed: ${result.rarity} <b>${result.item}</b>`;
+      }
+    }
+
+    function triggerCooldown(ms) {
+      cooldownActive = true;
+      document.getElementById("unboxBtn").disabled = true;
+      setTimeout(() => {
+        cooldownActive = false;
+        document.getElementById("unboxBtn").disabled = false;
+      }, ms);
+    }
+
+    function multiUnbox() {
+      const amount = parseInt(document.getElementById("multiInput").value);
+      if (!amount || amount <= 0 || !currentCrate) return;
+
+      let results = [];
+      for (let i = 0; i < amount; i++) {
+        legendaryCounter++;
+        mythicCounter++;
+        results.push(getRandomItem(crates[currentCrate]));
+      }
+
+      const grouped = {};
+      results.forEach(r => {
+        const key = r.type + "|" + r.rarity + " " + r.item;
+        if (!grouped[key]) grouped[key] = 0;
+        grouped[key]++;
+      });
+
+      const sorted = Object.entries(grouped).sort((a, b) => {
+        const rarityA = a[0].split("|")[0];
+        const rarityB = b[0].split("|")[0];
+        return rarityOrder[rarityA] - rarityOrder[rarityB];
+      });
+
+      let log = "";
+      sorted.forEach(([key, count]) => {
+        const [, name] = key.split("|");
+        log += `x${count} ${name}<br>`;
+      });
+
+      document.getElementById("logContent").innerHTML = log;
+      document.getElementById("popupOverlay").style.display = "flex";
+    }
+
+    function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
+
+    function launchConfetti() {
+      const shapes = ["rect", "triangle"];
+      for (let i = 0; i < 40; i++) {
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
+        confetti.style.left = Math.random() * 100 + "vw";
+        confetti.style.background = getRandomColor();
+        confetti.style.width = (Math.random() * 12 + 8) + "px";
+        confetti.style.height = (Math.random() * 20 + 10) + "px";
+        if (shape === "triangle") {
+          confetti.style.width = 0;
+          confetti.style.height = 0;
+          confetti.style.borderLeft = "8px solid transparent";
+          confetti.style.borderRight = "8px solid transparent";
+          confetti.style.borderBottom = "14px solid " + getRandomColor();
+          confetti.style.background = "transparent";
+        }
+        confetti.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
+    function getRandomColor() {
+      const colors = ["#ff0","#0f0","#0ff","#f0f","#f00","#00f","#ffa500","#39ff14"];
+      return colors[Math.floor(Math.random() * colors.length)];
     }
   </script>
 </body>
