@@ -13,7 +13,9 @@
       overflow-x: hidden;
       overflow-y: hidden;
     }
+
     h1 { margin: 20px; }
+
     .crate-buttons {
       display: flex;
       justify-content: center;
@@ -21,6 +23,7 @@
       gap: 12px;
       margin-bottom: 20px;
     }
+
     .crate-buttons button {
       display: flex;
       align-items: center;
@@ -34,15 +37,19 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     .crate-buttons button:hover {
       transform: scale(1.05);
       background: #333;
     }
+
     .crate-buttons img {
       width: 30px;
       height: 30px;
       object-fit: contain;
     }
+
+    /* Selected crate glow colors */
     .crate-buttons button.active#standardBtn { box-shadow: 0 0 10px 3px #00bfff; border-color: #00bfff; }
     .crate-buttons button.active#megarockBtn { box-shadow: 0 0 10px 3px #a1ff0a; border-color: #a1ff0a; }
     .crate-buttons button.active#bobBtn { box-shadow: 0 0 10px 3px #ff77ff; border-color: #ff77ff; }
@@ -59,12 +66,15 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled { transform: scale(1.05); }
+
     #unboxBtn:disabled, #multiUnboxBtn:disabled {
       background: #444;
       color: #aaa;
       cursor: not-allowed;
     }
+
     #multiInput {
       width: 80px;
       padding: 6px;
@@ -72,24 +82,39 @@
       border: none;
       text-align: center;
     }
+
     #result { margin-top: 20px; font-size: 22px; font-weight: bold; }
+
     .separator {
       border-top: 2px solid #444;
       margin: 15px auto;
       width: 60%;
     }
 
-    /* Popup styles */
+    .confetti {
+      position: fixed;
+      bottom: 0;
+      opacity: 0.9;
+      animation: pop-fall 3s ease-out forwards;
+    }
+
+    @keyframes pop-fall {
+      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
+      50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
     #popupOverlay {
       display: none;
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
+
     #popupBox {
       background: #222;
       padding: 20px;
@@ -99,7 +124,9 @@
       overflow-y: auto;
       text-align: left;
     }
+
     #popupBox h2 { margin-top: 0; }
+
     #closePopup {
       background: #444;
       color: white;
@@ -109,21 +136,8 @@
       cursor: pointer;
       float: right;
     }
-    #closePopup:hover { background: #666; }
 
-    /* Confetti */
-    .confetti {
-      position: fixed;
-      bottom: 0;
-      opacity: 0.9;
-      animation: pop-fall 3s ease-out forwards;
-    }
-    @keyframes pop-fall {
-      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
-      50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
-      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-    }
+    #closePopup:hover { background: #666; }
   </style>
 </head>
 <body>
@@ -131,22 +145,22 @@
 
   <div class="crate-buttons">
     <button id="standardBtn" onclick="selectCrate('standard', this)">
-      <img src="standardcrate.png"> Standard Crate
+      <img src="standardcrate.png" alt="Standard Crate"> Standard Crate
     </button>
     <button id="megarockBtn" onclick="selectCrate('megarock', this)">
-      <img src="megarockcrate.png"> Megarock Crate
+      <img src="megarockcrate.png" alt="Megarock Crate"> Megarock Crate
     </button>
     <button id="bobBtn" onclick="selectCrate('bob', this)">
-      <img src="bobcrate.png"> Bob Crate
+      <img src="bobcrate.png" alt="Bob Crate"> Bob Crate
     </button>
     <button id="barzilBtn" onclick="selectCrate('barzil', this)">
-      <img src="barzilcrate.png"> Barzil Crate
+      <img src="barzilcrate.png" alt="Barzil Crate"> Barzil Crate
     </button>
     <button id="overkillBtn" onclick="selectCrate('overkill', this)">
-      <img src="overkillcrate.png"> Overkill Crate
+      <img src="overkillcrate.png" alt="Overkill Crate"> Overkill Crate
     </button>
     <button id="jackBtn" onclick="selectCrate('jack', this)">
-      <img src="jackscrate.png"> Jack's Crate
+      <img src="jackscrate.png" alt="Jack's Crate"> Jack's Crate
     </button>
   </div>
 
@@ -172,9 +186,8 @@
   <script>
     let currentCrate = null;
     let cooldownActive = false;
-    let legendaryCounter = 0;
-    let mythicCounter = 0;
 
+    // rarity order for sorting (lower number = higher priority)
     const rarityOrder = { mythic: 1, legendary: 2, epic: 3, rare: 4, uncommon: 5 };
 
     const crates = {
@@ -232,6 +245,7 @@
     function getRandomItem(crateData) {
       let roll = Math.random() * 100;
       let cumulative = 0;
+      // iterate the categories in the crate object order
       for (const [type, data] of Object.entries(crateData)) {
         cumulative += data.chance;
         if (roll <= cumulative) return { item: randomChoice(data.items), rarity: data.color, type };
@@ -249,28 +263,48 @@
         document.getElementById("mythicSound").play();
         launchConfetti();
       }
+      // always use a brief cooldown (legendary/mythic specific cooldowns were removed per last stable version)
       triggerCooldown(500);
     }
 
+    // NEW: multiUnbox -> grouped by rarity, and inside each rarity sorted by count descending
     function multiUnbox() {
       const amount = parseInt(document.getElementById("multiInput").value);
       if (!amount || amount <= 0 || !currentCrate) return;
-      let results = [];
-      for (let i = 0; i < amount; i++) results.push(getRandomItem(crates[currentCrate]));
+
+      const results = [];
+      for (let i = 0; i < amount; i++) {
+        results.push(getRandomItem(crates[currentCrate]));
+      }
+
+      // Group by type + item, track rarity & count
       const grouped = {};
       results.forEach(r => {
-        const key = `${r.type}|${r.rarity} ${r.item}`;
-        if (!grouped[key]) grouped[key] = 0;
-        grouped[key]++;
+        const key = `${r.type}|${r.item}`; // keep type separate for sorting by rarity later
+        if (!grouped[key]) grouped[key] = { type: r.type, item: r.item, rarity: r.rarity, count: 0 };
+        grouped[key].count++;
       });
 
-      const sorted = Object.entries(grouped).sort((a, b) => rarityOrder[a[0].split("|")[0]] - rarityOrder[b[0].split("|")[0]]);
-      let log = sorted.map(([key, count]) => {
-        const [, name] = key.split("|");
-        return `x${count} ${name}`;
-      }).join("<br>");
+      // Convert grouped to array
+      const groupedArr = Object.values(grouped);
 
-      document.getElementById("logContent").innerHTML = log;
+      // Sort groupedArr:
+      // 1) by rarity priority (mythic -> legendary -> epic -> rare -> uncommon)
+      // 2) within same rarity, by count descending (most frequent first)
+      // 3) tie-breaker: alphabetically by item name
+      groupedArr.sort((a, b) => {
+        const ra = rarityOrder[a.type] || 999;
+        const rb = rarityOrder[b.type] || 999;
+        if (ra !== rb) return ra - rb;
+        if (b.count !== a.count) return b.count - a.count;
+        return a.item.localeCompare(b.item);
+      });
+
+      // Build the final log string
+      // Example: x12 🔵 Shadow Bite
+      let logHtml = groupedArr.map(g => `x${g.count} ${g.rarity} <b>${escapeHtml(g.item)}</b>`).join("<br>");
+
+      document.getElementById("logContent").innerHTML = logHtml;
       document.getElementById("popupOverlay").style.display = "flex";
     }
 
@@ -304,6 +338,11 @@
     function getRandomColor() {
       const colors = ["#ff0","#0f0","#0ff","#f0f","#f00","#00f","#ffa500","#39ff14"];
       return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // small html-escape helper for item names
+    function escapeHtml(str) {
+      return (str + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
   </script>
 </body>
