@@ -342,11 +342,4 @@
           confetti.style.borderBottom = "14px solid " + getRandomColor();
           confetti.style.background = "transparent";
         }
-        confetti.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
-        document.body.appendChild(confetti);
-        setTimeout(() => confetti.remove(), 3000);
-      }
-    }
-
-    function getRandomColor() {
-      const colors = ["#ff0","#0f0","#0ff","#f0f","#f00","#00f","#ffa500
+        confetti.style.animationDuration = (Math.random() * 1.5 + 2)
