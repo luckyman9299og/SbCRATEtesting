@@ -13,9 +13,7 @@
       overflow-x: hidden;
       overflow-y: hidden;
     }
-    h1 {
-      margin: 20px;
-    }
+    h1 { margin: 20px; }
     .crate-buttons {
       display: flex;
       justify-content: center;
@@ -54,9 +52,7 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled {
-      transform: scale(1.05);
-    }
+    #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled { transform: scale(1.05); }
     #unboxBtn:disabled, #multiUnboxBtn:disabled {
       background: #444;
       color: #aaa;
@@ -69,11 +65,7 @@
       border: none;
       text-align: center;
     }
-    #result {
-      margin-top: 20px;
-      font-size: 22px;
-      font-weight: bold;
-    }
+    #result { margin-top: 20px; font-size: 22px; font-weight: bold; }
     .separator {
       border-top: 2px solid #444;
       margin: 15px auto;
@@ -141,6 +133,9 @@
     <button onclick="selectCrate('overkill')">
       <img src="overkillcrate.png" alt="Overkill Crate"> Overkill Crate
     </button>
+    <button onclick="selectCrate('jack')">
+      <img src="jackscrate.png" alt="Jack's Crate"> Jack's Crate
+    </button>
   </div>
 
   <div>
@@ -203,6 +198,13 @@
         epics: { chance: 80, items: ["Vibrant Supernova","Sand Tornado","Rainbomb","Chilling Fog","Aquatic Gateway"], color: "🟣" },
         legendary: { chance: 18.5, items: ["Toxic Puddle","Purple Rapture","Popstar Spectacle"], color: "🟡" },
         mythic: { chance: 1.5, items: ["Hellfire Sigil"], color: "🔴" }
+      },
+      jack: {
+        uncommons: { chance: 60, items: ["Troll Requiem","Runes","Realistic Eye","Lava Skulls","Fall Leaves","Cauldron Bubble"], color: "🟢" },
+        rares: { chance: 34, items: ["Witch's Spell","Shadow Bite","Run","Crows"], color: "🔵" },
+        epics: { chance: 5, items: ["Crimson Splash","Batty","Abyss"], color: "🟣" },
+        legendary: { chance: 0.85, items: ["Eerie Fog","Jack 'O Lantern"], color: "🟡" },
+        mythic: { chance: 0.15, items: ["Damned"], color: "🔴" }
       }
     };
 
@@ -220,39 +222,19 @@
       let roll = Math.random() * 100;
       let cumulative = 0;
 
-      if (crateData.uncommons) {
-        cumulative += crateData.uncommons.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.uncommons.items), rarity: crateData.uncommons.color, type: "uncommon" };
-      }
-      if (crateData.rares) {
-        cumulative += crateData.rares.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.rares.items), rarity: crateData.rares.color, type: "rare" };
-      }
-      if (crateData.epics) {
-        cumulative += crateData.epics.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.epics.items), rarity: crateData.epics.color, type: "epic" };
-      }
-      if (crateData.legendary) {
-        cumulative += crateData.legendary.chance;
-        if (roll <= cumulative) return { item: randomChoice(crateData.legendary.items), rarity: crateData.legendary.color, type: "legendary" };
-      }
-      if (crateData.mythic) {
-        return { item: randomChoice(crateData.mythic.items), rarity: crateData.mythic.color, type: "mythic" };
+      for (const [type, data] of Object.entries(crateData)) {
+        cumulative += data.chance;
+        if (roll <= cumulative) return { item: randomChoice(data.items), rarity: data.color, type };
       }
       return { item: "Unknown", rarity: "", type: "none" };
     }
 
-    function randomChoice(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
+    function randomChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
     function unbox() {
       if (!currentCrate || cooldownActive) return;
-
-      legendaryCounter++;
-      mythicCounter++;
+      legendaryCounter++; mythicCounter++;
       const result = getRandomItem(crates[currentCrate]);
-
       if (result.type === "legendary") {
         document.getElementById("result").innerHTML = `You rolled a legendary after ${legendaryCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
         legendaryCounter = 0;
@@ -295,25 +277,17 @@
         grouped[key]++;
       });
 
-      const sorted = Object.entries(grouped).sort((a, b) => {
-        const rarityA = a[0].split("|")[0];
-        const rarityB = b[0].split("|")[0];
-        return rarityOrder[rarityA] - rarityOrder[rarityB];
-      });
-
-      let log = "";
-      sorted.forEach(([key, count]) => {
+      const sorted = Object.entries(grouped).sort((a, b) => rarityOrder[a[0].split("|")[0]] - rarityOrder[b[0].split("|")[0]]);
+      let log = sorted.map(([key, count]) => {
         const [, name] = key.split("|");
-        log += `x${count} ${name}<br>`;
-      });
+        return `x${count} ${name}`;
+      }).join("<br>");
 
       document.getElementById("logContent").innerHTML = log;
       document.getElementById("popupOverlay").style.display = "flex";
     }
 
-    function closePopup() {
-      document.getElementById("popupOverlay").style.display = "none";
-    }
+    function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
 
     function launchConfetti() {
       const shapes = ["rect", "triangle"];
