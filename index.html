@@ -13,9 +13,7 @@
       overflow-x: hidden;
       overflow-y: hidden;
     }
-
     h1 { margin: 20px; }
-
     .crate-buttons {
       display: flex;
       justify-content: center;
@@ -23,7 +21,6 @@
       gap: 12px;
       margin-bottom: 20px;
     }
-
     .crate-buttons button {
       display: flex;
       align-items: center;
@@ -37,19 +34,15 @@
       cursor: pointer;
       transition: 0.2s;
     }
-
     .crate-buttons button:hover {
       transform: scale(1.05);
       background: #333;
     }
-
     .crate-buttons img {
       width: 30px;
       height: 30px;
       object-fit: contain;
     }
-
-    /* Selected crate glow colors */
     .crate-buttons button.active#standardBtn { box-shadow: 0 0 10px 3px #00bfff; border-color: #00bfff; }
     .crate-buttons button.active#megarockBtn { box-shadow: 0 0 10px 3px #a1ff0a; border-color: #a1ff0a; }
     .crate-buttons button.active#bobBtn { box-shadow: 0 0 10px 3px #ff77ff; border-color: #ff77ff; }
@@ -66,15 +59,12 @@
       cursor: pointer;
       transition: 0.2s;
     }
-
     #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled { transform: scale(1.05); }
-
     #unboxBtn:disabled, #multiUnboxBtn:disabled {
       background: #444;
       color: #aaa;
       cursor: not-allowed;
     }
-
     #multiInput {
       width: 80px;
       padding: 6px;
@@ -82,39 +72,24 @@
       border: none;
       text-align: center;
     }
-
     #result { margin-top: 20px; font-size: 22px; font-weight: bold; }
-
     .separator {
       border-top: 2px solid #444;
       margin: 15px auto;
       width: 60%;
     }
 
-    .confetti {
-      position: fixed;
-      bottom: 0;
-      opacity: 0.9;
-      animation: pop-fall 3s ease-out forwards;
-    }
-
-    @keyframes pop-fall {
-      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
-      50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
-      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-    }
-
+    /* Popup styles */
     #popupOverlay {
       display: none;
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
-
     #popupBox {
       background: #222;
       padding: 20px;
@@ -124,9 +99,7 @@
       overflow-y: auto;
       text-align: left;
     }
-
     #popupBox h2 { margin-top: 0; }
-
     #closePopup {
       background: #444;
       color: white;
@@ -136,8 +109,21 @@
       cursor: pointer;
       float: right;
     }
-
     #closePopup:hover { background: #666; }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      bottom: 0;
+      opacity: 0.9;
+      animation: pop-fall 3s ease-out forwards;
+    }
+    @keyframes pop-fall {
+      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
+      50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -145,22 +131,22 @@
 
   <div class="crate-buttons">
     <button id="standardBtn" onclick="selectCrate('standard', this)">
-      <img src="standardcrate.png" alt="Standard Crate"> Standard Crate
+      <img src="standardcrate.png"> Standard Crate
     </button>
     <button id="megarockBtn" onclick="selectCrate('megarock', this)">
-      <img src="megarockcrate.png" alt="Megarock Crate"> Megarock Crate
+      <img src="megarockcrate.png"> Megarock Crate
     </button>
     <button id="bobBtn" onclick="selectCrate('bob', this)">
-      <img src="bobcrate.png" alt="Bob Crate"> Bob Crate
+      <img src="bobcrate.png"> Bob Crate
     </button>
     <button id="barzilBtn" onclick="selectCrate('barzil', this)">
-      <img src="barzilcrate.png" alt="Barzil Crate"> Barzil Crate
+      <img src="barzilcrate.png"> Barzil Crate
     </button>
     <button id="overkillBtn" onclick="selectCrate('overkill', this)">
-      <img src="overkillcrate.png" alt="Overkill Crate"> Overkill Crate
+      <img src="overkillcrate.png"> Overkill Crate
     </button>
     <button id="jackBtn" onclick="selectCrate('jack', this)">
-      <img src="jackscrate.png" alt="Jack's Crate"> Jack's Crate
+      <img src="jackscrate.png"> Jack's Crate
     </button>
   </div>
 
@@ -189,7 +175,6 @@
     let legendaryCounter = 0;
     let mythicCounter = 0;
 
-    // Rarity order (1 = most rare)
     const rarityOrder = { mythic: 1, legendary: 2, epic: 3, rare: 4, uncommon: 5 };
 
     const crates = {
@@ -234,23 +219,19 @@
       }
     };
 
-    function selectCrate(crate, buttonEl) {
+    function selectCrate(crate, btn) {
       currentCrate = crate;
-      legendaryCounter = 0;
-      mythicCounter = 0;
+      document.querySelectorAll('.crate-buttons button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
       document.getElementById("unboxBtn").disabled = false;
       document.getElementById("multiInput").style.display = "inline-block";
       document.getElementById("multiUnboxBtn").style.display = "inline-block";
       document.getElementById("result").innerHTML = `Selected <b>${crate} crate</b>. Press Unbox!`;
-
-      document.querySelectorAll(".crate-buttons button").forEach(btn => btn.classList.remove("active"));
-      buttonEl.classList.add("active");
     }
 
     function getRandomItem(crateData) {
       let roll = Math.random() * 100;
       let cumulative = 0;
-
       for (const [type, data] of Object.entries(crateData)) {
         cumulative += data.chance;
         if (roll <= cumulative) return { item: randomChoice(data.items), rarity: data.color, type };
@@ -262,21 +243,39 @@
 
     function unbox() {
       if (!currentCrate || cooldownActive) return;
-      legendaryCounter++; mythicCounter++;
       const result = getRandomItem(crates[currentCrate]);
-      if (result.type === "legendary") {
-        document.getElementById("result").innerHTML = `You rolled a legendary after ${legendaryCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
-        legendaryCounter = 0;
-        triggerCooldown(500);
-      } else if (result.type === "mythic") {
-        document.getElementById("result").innerHTML = `You rolled a mythic after ${mythicCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
-        mythicCounter = 0;
-        triggerCooldown(5000);
+      document.getElementById("result").innerHTML = `You unboxed: ${result.rarity} <b>${result.item}</b>`;
+      if (result.type === "mythic") {
         document.getElementById("mythicSound").play();
         launchConfetti();
-      } else {
-        document.getElementById("result").innerHTML = `You unboxed: ${result.rarity} <b>${result.item}</b>`;
       }
+      triggerCooldown(500);
+    }
+
+    function multiUnbox() {
+      const amount = parseInt(document.getElementById("multiInput").value);
+      if (!amount || amount <= 0 || !currentCrate) return;
+      let results = [];
+      for (let i = 0; i < amount; i++) results.push(getRandomItem(crates[currentCrate]));
+      const grouped = {};
+      results.forEach(r => {
+        const key = `${r.type}|${r.rarity} ${r.item}`;
+        if (!grouped[key]) grouped[key] = 0;
+        grouped[key]++;
+      });
+
+      const sorted = Object.entries(grouped).sort((a, b) => rarityOrder[a[0].split("|")[0]] - rarityOrder[b[0].split("|")[0]]);
+      let log = sorted.map(([key, count]) => {
+        const [, name] = key.split("|");
+        return `x${count} ${name}`;
+      }).join("<br>");
+
+      document.getElementById("logContent").innerHTML = log;
+      document.getElementById("popupOverlay").style.display = "flex";
+    }
+
+    function closePopup() {
+      document.getElementById("popupOverlay").style.display = "none";
     }
 
     function triggerCooldown(ms) {
@@ -288,59 +287,17 @@
       }, ms);
     }
 
-    function multiUnbox() {
-      const amount = parseInt(document.getElementById("multiInput").value);
-      if (!amount || amount <= 0 || !currentCrate) return;
-
-      let results = [];
-      for (let i = 0; i < amount; i++) {
-        legendaryCounter++;
-        mythicCounter++;
-        results.push(getRandomItem(crates[currentCrate]));
-      }
-
-      const grouped = {};
-      results.forEach(r => {
-        const key = r.type + "|" + r.rarity + " " + r.item;
-        if (!grouped[key]) grouped[key] = 0;
-        grouped[key]++;
-      });
-
-      // SORT: Most rare (mythic) to least rare (uncommon)
-      const sorted = Object.entries(grouped).sort((a, b) => rarityOrder[a[0].split("|")[0]] - rarityOrder[b[0].split("|")[0]]);
-
-      let log = sorted.map(([key, count]) => {
-        const [, name] = key.split("|");
-        return `x${count} ${name}`;
-      }).join("<br>");
-
-      document.getElementById("logContent").innerHTML = log;
-      document.getElementById("popupOverlay").style.display = "flex";
-    }
-
-    function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
-
     function launchConfetti() {
-      const shapes = ["rect", "triangle"];
       for (let i = 0; i < 40; i++) {
-        const confetti = document.createElement("div");
-        confetti.className = "confetti";
-        const shape = shapes[Math.floor(Math.random() * shapes.length)];
-        confetti.style.left = Math.random() * 100 + "vw";
-        confetti.style.background = getRandomColor();
-        confetti.style.width = (Math.random() * 12 + 8) + "px";
-        confetti.style.height = (Math.random() * 20 + 10) + "px";
-        if (shape === "triangle") {
-          confetti.style.width = 0;
-          confetti.style.height = 0;
-          confetti.style.borderLeft = "8px solid transparent";
-          confetti.style.borderRight = "8px solid transparent";
-          confetti.style.borderBottom = "14px solid " + getRandomColor();
-          confetti.style.background = "transparent";
-        }
-        confetti.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
-        document.body.appendChild(confetti);
-        setTimeout(() => confetti.remove(), 3000);
+        const c = document.createElement("div");
+        c.className = "confetti";
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.background = getRandomColor();
+        c.style.width = (Math.random() * 12 + 8) + "px";
+        c.style.height = (Math.random() * 20 + 10) + "px";
+        c.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3000);
       }
     }
 
