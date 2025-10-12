@@ -51,8 +51,13 @@
       font-size: 16px;
       cursor: pointer;
       transition: 0.2s;
+      background: #222;
+      color: white;
     }
-    #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled { transform: scale(1.05); }
+    #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled {
+      transform: scale(1.05);
+      background: #333;
+    }
     #unboxBtn:disabled, #multiUnboxBtn:disabled {
       background: #444;
       color: #aaa;
@@ -82,9 +87,9 @@
       animation: pop-fall 3s ease-out forwards;
     }
     @keyframes pop-fall {
-      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
-      50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
+      0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      20% { transform: translateY(-150px) scale(1.2) rotate(90deg); }
+      50% { transform: translateY(-250px) scale(1) rotate(180deg); }
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
     #popupOverlay {
@@ -220,6 +225,7 @@
 
     function selectCrate(crate) {
       currentCrate = crate;
+      cooldownActive = false; // reset cooldown to prevent button lock
       legendaryCounter = 0;
       mythicCounter = 0;
       document.getElementById("unboxBtn").disabled = false;
@@ -231,6 +237,7 @@
     function getRandomItem(crateData) {
       let roll = Math.random() * 100;
       let cumulative = 0;
+
       if (crateData.uncommons) {
         cumulative += crateData.uncommons.chance;
         if (roll <= cumulative) return { item: randomChoice(crateData.uncommons.items), rarity: crateData.uncommons.color, type: "uncommon" };
@@ -269,11 +276,8 @@
         document.getElementById("result").innerHTML = `You rolled a mythic after ${mythicCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
         mythicCounter = 0;
         triggerCooldown(5000);
-        if (currentCrate === "guides") {
-          document.getElementById("reludeSound").play();
-        } else {
-          document.getElementById("mythicSound").play();
-        }
+        if (currentCrate === "guides") document.getElementById("reludeSound").play();
+        else document.getElementById("mythicSound").play();
         launchConfetti();
       } else {
         document.getElementById("result").innerHTML = `You unboxed: ${result.rarity} <b>${result.item}</b>`;
@@ -339,4 +343,4 @@
           confetti.style.borderLeft = "8px solid transparent";
           confetti.style.borderRight = "8px solid transparent";
           confetti.style.borderBottom = "14px solid " + getRandomColor();
-          confetti.style.background = "transparent
+          confetti.style.background = "transparent";
