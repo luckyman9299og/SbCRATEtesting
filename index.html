@@ -13,7 +13,9 @@
       overflow-x: hidden;
       overflow-y: hidden;
     }
+
     h1 { margin: 20px; }
+
     .crate-buttons {
       display: flex;
       justify-content: center;
@@ -21,28 +23,40 @@
       gap: 12px;
       margin-bottom: 20px;
     }
+
     .crate-buttons button {
       display: flex;
       align-items: center;
       gap: 8px;
       background: #222;
       color: white;
-      border: none;
+      border: 2px solid transparent;
       border-radius: 8px;
       padding: 10px 16px;
       font-size: 16px;
       cursor: pointer;
       transition: 0.2s;
     }
+
     .crate-buttons button:hover {
       transform: scale(1.05);
       background: #333;
     }
+
     .crate-buttons img {
       width: 30px;
       height: 30px;
       object-fit: contain;
     }
+
+    /* Selected crate glow colors */
+    .crate-buttons button.active#standardBtn { box-shadow: 0 0 10px 3px #00bfff; border-color: #00bfff; }
+    .crate-buttons button.active#megarockBtn { box-shadow: 0 0 10px 3px #a1ff0a; border-color: #a1ff0a; }
+    .crate-buttons button.active#bobBtn { box-shadow: 0 0 10px 3px #ff77ff; border-color: #ff77ff; }
+    .crate-buttons button.active#barzilBtn { box-shadow: 0 0 10px 3px #ffcc00; border-color: #ffcc00; }
+    .crate-buttons button.active#overkillBtn { box-shadow: 0 0 10px 3px #ff0000; border-color: #ff0000; }
+    .crate-buttons button.active#jackBtn { box-shadow: 0 0 10px 3px orange; border-color: orange; }
+
     #unboxBtn, #multiUnboxBtn {
       margin: 10px;
       padding: 12px 20px;
@@ -52,12 +66,15 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled { transform: scale(1.05); }
+
     #unboxBtn:disabled, #multiUnboxBtn:disabled {
       background: #444;
       color: #aaa;
       cursor: not-allowed;
     }
+
     #multiInput {
       width: 80px;
       padding: 6px;
@@ -65,24 +82,29 @@
       border: none;
       text-align: center;
     }
+
     #result { margin-top: 20px; font-size: 22px; font-weight: bold; }
+
     .separator {
       border-top: 2px solid #444;
       margin: 15px auto;
       width: 60%;
     }
+
     .confetti {
       position: fixed;
       bottom: 0;
       opacity: 0.9;
       animation: pop-fall 3s ease-out forwards;
     }
+
     @keyframes pop-fall {
       0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
       20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
       50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
+
     #popupOverlay {
       display: none;
       position: fixed;
@@ -92,6 +114,7 @@
       align-items: center;
       z-index: 1000;
     }
+
     #popupBox {
       background: #222;
       padding: 20px;
@@ -101,7 +124,9 @@
       overflow-y: auto;
       text-align: left;
     }
+
     #popupBox h2 { margin-top: 0; }
+
     #closePopup {
       background: #444;
       color: white;
@@ -111,6 +136,7 @@
       cursor: pointer;
       float: right;
     }
+
     #closePopup:hover { background: #666; }
   </style>
 </head>
@@ -118,22 +144,22 @@
   <h1>Crate Unbox Simulator</h1>
 
   <div class="crate-buttons">
-    <button onclick="selectCrate('standard')">
+    <button id="standardBtn" onclick="selectCrate('standard', this)">
       <img src="standardcrate.png" alt="Standard Crate"> Standard Crate
     </button>
-    <button onclick="selectCrate('megarock')">
+    <button id="megarockBtn" onclick="selectCrate('megarock', this)">
       <img src="megarockcrate.png" alt="Megarock Crate"> Megarock Crate
     </button>
-    <button onclick="selectCrate('bob')">
+    <button id="bobBtn" onclick="selectCrate('bob', this)">
       <img src="bobcrate.png" alt="Bob Crate"> Bob Crate
     </button>
-    <button onclick="selectCrate('barzil')">
+    <button id="barzilBtn" onclick="selectCrate('barzil', this)">
       <img src="barzilcrate.png" alt="Barzil Crate"> Barzil Crate
     </button>
-    <button onclick="selectCrate('overkill')">
+    <button id="overkillBtn" onclick="selectCrate('overkill', this)">
       <img src="overkillcrate.png" alt="Overkill Crate"> Overkill Crate
     </button>
-    <button onclick="selectCrate('jack')">
+    <button id="jackBtn" onclick="selectCrate('jack', this)">
       <img src="jackscrate.png" alt="Jack's Crate"> Jack's Crate
     </button>
   </div>
@@ -147,7 +173,6 @@
 
   <div id="result"></div>
 
-  <!-- Popup -->
   <div id="popupOverlay">
     <div id="popupBox">
       <button id="closePopup" onclick="closePopup()">Close</button>
@@ -208,7 +233,7 @@
       }
     };
 
-    function selectCrate(crate) {
+    function selectCrate(crate, buttonEl) {
       currentCrate = crate;
       legendaryCounter = 0;
       mythicCounter = 0;
@@ -216,6 +241,9 @@
       document.getElementById("multiInput").style.display = "inline-block";
       document.getElementById("multiUnboxBtn").style.display = "inline-block";
       document.getElementById("result").innerHTML = `Selected <b>${crate} crate</b>. Press Unbox!`;
+
+      document.querySelectorAll(".crate-buttons button").forEach(btn => btn.classList.remove("active"));
+      buttonEl.classList.add("active");
     }
 
     function getRandomItem(crateData) {
