@@ -189,6 +189,7 @@
     let legendaryCounter = 0;
     let mythicCounter = 0;
 
+    // Rarity order (1 = most rare)
     const rarityOrder = { mythic: 1, legendary: 2, epic: 3, rare: 4, uncommon: 5 };
 
     const crates = {
@@ -305,7 +306,9 @@
         grouped[key]++;
       });
 
+      // SORT: Most rare (mythic) to least rare (uncommon)
       const sorted = Object.entries(grouped).sort((a, b) => rarityOrder[a[0].split("|")[0]] - rarityOrder[b[0].split("|")[0]]);
+
       let log = sorted.map(([key, count]) => {
         const [, name] = key.split("|");
         return `x${count} ${name}`;
