@@ -51,7 +51,7 @@
       font-size: 16px;
       cursor: pointer;
       transition: 0.2s;
-      background: #222;
+      background: #2a2a2a;
       color: white;
     }
     #unboxBtn:hover:enabled, #multiUnboxBtn:hover:enabled {
@@ -69,6 +69,8 @@
       border-radius: 6px;
       border: none;
       text-align: center;
+      background: #222;
+      color: white;
     }
     #result {
       margin-top: 20px;
@@ -87,9 +89,9 @@
       animation: pop-fall 3s ease-out forwards;
     }
     @keyframes pop-fall {
-      0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      20% { transform: translateY(-150px) scale(1.2) rotate(90deg); }
-      50% { transform: translateY(-250px) scale(1) rotate(180deg); }
+      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      20%  { transform: translateY(-150px) scale(1.2) rotate(90deg); }
+      50%  { transform: translateY(-250px) scale(1) rotate(180deg); }
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
     #popupOverlay {
@@ -225,9 +227,9 @@
 
     function selectCrate(crate) {
       currentCrate = crate;
-      cooldownActive = false; // reset cooldown to prevent button lock
       legendaryCounter = 0;
       mythicCounter = 0;
+      cooldownActive = false;
       document.getElementById("unboxBtn").disabled = false;
       document.getElementById("multiInput").style.display = "inline-block";
       document.getElementById("multiUnboxBtn").style.display = "inline-block";
@@ -237,7 +239,6 @@
     function getRandomItem(crateData) {
       let roll = Math.random() * 100;
       let cumulative = 0;
-
       if (crateData.uncommons) {
         cumulative += crateData.uncommons.chance;
         if (roll <= cumulative) return { item: randomChoice(crateData.uncommons.items), rarity: crateData.uncommons.color, type: "uncommon" };
@@ -260,13 +261,15 @@
       return { item: "Unknown", rarity: "", type: "none" };
     }
 
-    function randomChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randomChoice(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
 
     function unbox() {
       if (!currentCrate || cooldownActive) return;
+      const result = getRandomItem(crates[currentCrate]);
       legendaryCounter++;
       mythicCounter++;
-      const result = getRandomItem(crates[currentCrate]);
 
       if (result.type === "legendary") {
         document.getElementById("result").innerHTML = `You rolled a legendary after ${legendaryCounter} rolls: ${result.rarity} <b>${result.item}</b>`;
@@ -296,11 +299,8 @@
     function multiUnbox() {
       const amount = parseInt(document.getElementById("multiInput").value);
       if (!amount || amount <= 0 || !currentCrate) return;
-
       let results = [];
-      for (let i = 0; i < amount; i++) {
-        results.push(getRandomItem(crates[currentCrate]));
-      }
+      for (let i = 0; i < amount; i++) results.push(getRandomItem(crates[currentCrate]));
 
       const grouped = {};
       results.forEach(r => {
@@ -309,15 +309,15 @@
         grouped[key]++;
       });
 
-      const sorted = Object.entries(grouped).sort((a, b) => {
+      const sorted = Object.entries(grouped).sort((a,b)=>{
         const rarityA = a[0].split("|")[0];
         const rarityB = b[0].split("|")[0];
         return rarityOrder[rarityA] - rarityOrder[rarityB];
       });
 
       let log = "";
-      sorted.forEach(([key, count]) => {
-        const [, name] = key.split("|");
+      sorted.forEach(([key,count])=>{
+        const [,name] = key.split("|");
         log += `x${count} ${name}<br>`;
       });
 
@@ -325,7 +325,9 @@
       document.getElementById("popupOverlay").style.display = "flex";
     }
 
-    function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
+    function closePopup() {
+      document.getElementById("popupOverlay").style.display = "none";
+    }
 
     function launchConfetti() {
       const shapes = ["rect", "triangle"];
@@ -337,10 +339,4 @@
         confetti.style.background = getRandomColor();
         confetti.style.width = (Math.random() * 12 + 8) + "px";
         confetti.style.height = (Math.random() * 20 + 10) + "px";
-        if (shape === "triangle") {
-          confetti.style.width = 0;
-          confetti.style.height = 0;
-          confetti.style.borderLeft = "8px solid transparent";
-          confetti.style.borderRight = "8px solid transparent";
-          confetti.style.borderBottom = "14px solid " + getRandomColor();
-          confetti.style.background = "transparent";
+        if (shape === "
